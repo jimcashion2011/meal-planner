@@ -3,9 +3,8 @@ using MealPlanner.Core;
 namespace PlannerConsole;
 
 /// <summary>
-/// Starting set from the spec's open questions. Named dishes come from Jim's list;
-/// the pasta, chicken/vegetable and beef/vegetable slots are placeholders to swap
-/// for the family's real recipes.
+/// The family's 14 starting dinners: five favorites plus nine weeknight recipes
+/// (all 45 minutes or less) chosen to share ingredients with each other.
 /// </summary>
 public static class FamilyRecipes
 {
@@ -44,12 +43,16 @@ public static class FamilyRecipes
         new Ingredient("crescent roll dough", StoreSection.Dairy, Aliases: ["crescent rolls", "big & flaky crescent rolls"]),
         // Bakery
         new Ingredient("hamburger bun", StoreSection.Bakery),
+        new Ingredient("tortilla", StoreSection.Bakery, Aliases: ["flour tortillas"]),
         // Frozen
-        new Ingredient("frozen mixed vegetables", StoreSection.Frozen),
+        new Ingredient("frozen mixed vegetables", StoreSection.Frozen, Aliases: ["peas and carrots", "frozen peas and carrots"]),
         // Pantry
         new Ingredient("spaghetti", StoreSection.PantryDry),
         new Ingredient("penne", StoreSection.PantryDry),
         new Ingredient("fettuccine", StoreSection.PantryDry),
+        new Ingredient("lasagna noodle", StoreSection.PantryDry),
+        new Ingredient("honey", StoreSection.PantryDry),
+        new Ingredient("taco seasoning", StoreSection.SpicesAndSauces, Aliases: ["fajita seasoning"]),
         new Ingredient("rice", StoreSection.PantryDry),
         new Ingredient("flour", StoreSection.PantryDry, IsStaple: true),
         new Ingredient("cornstarch", StoreSection.PantryDry, IsStaple: true),
@@ -90,28 +93,28 @@ public static class FamilyRecipes
         Make("Breakfast for dinner", "eggs", 25, KidQuick,
             "pancake mix", "egg", "bacon", "milk", "maple syrup", "butter"),
 
-        // Pasta placeholders
-        Make("[Pasta 1] Spaghetti and meat sauce", "beef", 30, Kid,
-            "spaghetti", "ground beef", "marinara", "onion", "garlic", "parmesan"),
-        Make("[Pasta 2] Chicken fettuccine alfredo", "chicken", 30, Kid,
-            "fettuccine", "chicken breast", "heavy cream", "parmesan", "butter", "garlic", "broccoli"),
-        Make("[Pasta 3] Baked ziti with sausage", "sausage", 45, Kid,
-            "penne", "italian sausage", "marinara", "shredded mozzarella", "parmesan"),
+        // Pasta
+        Make("Chicken and broccoli alfredo", "chicken", 30, Kid,
+            "fettuccine", "chicken breast", "broccoli", "heavy cream", "parmesan", "butter", "garlic"),
+        Make("Skillet lasagna", "beef", 30, Kid,
+            "ground beef", "lasagna noodle", "marinara", "shredded mozzarella", "parmesan", "onion", "garlic"),
+        Make("Sausage and pepper penne", "sausage", 25, KidQuick,
+            "penne", "italian sausage", "bell pepper", "onion", "marinara"),
 
-        // Chicken and vegetable placeholders
-        Make("[Chicken 1] Sheet-pan chicken and veggies", "chicken", 40, None,
-            "chicken thigh", "potato", "green bean", "olive oil", "garlic", "italian seasoning"),
-        Make("[Chicken 2] Chicken fajitas", "chicken", 30, KidQuick,
-            "chicken breast", "bell pepper", "onion", "vegetable oil"),
-        Make("[Chicken 3] Chicken fried rice", "chicken", 25, KidQuick,
-            "chicken breast", "rice", "egg", "frozen mixed vegetables", "soy sauce", "green onion"),
+        // Chicken and vegetables
+        Make("Sheet-pan chicken fajitas", "chicken", 30, KidQuick,
+            "chicken breast", "bell pepper", "onion", "tortilla", "fajita seasoning", "vegetable oil"),
+        Make("Chicken fried rice", "chicken", 25, KidQuick,
+            "chicken breast", "rice", "egg", "peas and carrots", "soy sauce", "green onion"),
+        Make("Honey-garlic chicken thighs with potatoes and green beans", "chicken", 40, Kid,
+            "chicken thigh", "potato", "green bean", "honey", "soy sauce", "garlic", "olive oil"),
 
-        // Beef and vegetable placeholders
-        Make("[Beef 1] Beef and broccoli", "beef", 30, None,
+        // Beef and vegetables
+        Make("Beef and broccoli", "beef", 30, None,
             "flank steak", "broccoli", "rice", "soy sauce", "brown sugar", "garlic", "cornstarch"),
-        Make("[Beef 2] Beef tacos", "beef", 20, KidQuick,
-            "ground beef", "cheddar", "lettuce", "tomato", "onion"),
-        Make("[Beef 3] Stuffed peppers", "beef", 50, None,
-            "ground beef", "bell pepper", "rice", "marinara", "shredded mozzarella"),
+        Make("Beef tacos", "beef", 20, KidQuick,
+            "ground beef", "taco seasoning", "tortilla", "cheddar"),
+        Make("Unstuffed pepper skillet", "beef", 30, Kid,
+            "ground beef", "bell pepper", "rice", "marinara", "shredded mozzarella", "onion"),
     ];
 }

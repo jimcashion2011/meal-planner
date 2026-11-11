@@ -46,7 +46,5 @@ Staples (salt, oil, garlic...) are assumed on hand unless the pantry marks them 
 
 ## Next steps
 
-1. Replace the `[Pasta 1]`, `[Chicken 1]`, `[Beef 1]` placeholder recipes in
-   `samples/PlannerConsole/FamilyRecipes.cs` with the family's real dishes.
-2. Run the sample and tune the weights in `ScoreWeights` if the picks feel off.
-3. Milestone 2: Blazor WebAssembly app with pantry and recipe screens.
+1. Run the sample and tune the weights in `ScoreWeights` if the picks feel off.
+2. Milestone 2: Blazor WebAssembly app with pantry and recipe screens.
