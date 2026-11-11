@@ -1,5 +1,4 @@
 using MealPlanner.Core;
-using PlannerConsole;
 
 // A sample week: a realistic pantry, leftovers on Thursday, quick dinners on weeknights.
 var weekStart = new DateOnly(2027, 2, 1); // a Monday
@@ -37,7 +36,7 @@ var options = new PlanOptions
     },
 };
 
-var plan = new Planner(FamilyRecipes.Catalog).Plan(FamilyRecipes.All, pantry, options);
+var plan = new Planner(StarterData.CreateCatalog()).Plan(StarterData.Recipes, pantry, options);
 
 Console.WriteLine($"Dinner plan, week of {weekStart:MMM d}");
 Console.WriteLine(new string('-', 60));

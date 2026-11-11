@@ -1,0 +1,147 @@
+@page "/"
+@page "/pantry"
+@inject AppStore Store
+
+<PageTitle>Pantry</PageTitle>
+
+<h1>Pantry</h1>
+
+@if (!loaded)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <form class="card quick-add" @onsubmit="AddAsync" @onsubmit:preventDefault>
+        <input class="grow" list="ingredient-names" placeholder="Add an item, e.g. chicken"
+               autocomplete="off" @bind="newName" @bind:event="oninput" aria-label="Item" />
+        <datalist id="ingredient-names">
+            @foreach (var ingredient in Store.Catalog.All)
+            {
+                <option value="@ingredient.CanonicalName"></option>
+            }
+        </datalist>
+        <div class="levels" role="group" aria-label="How much">
+            @foreach (var level in Labels.Levels.Skip(1))
+            {
+                <button type="button" class="@(newLevel == level ? "on" : "")" @onclick="() => newLevel = level">@Labels.Level(level)</button>
+            }
+        </div>
+        <label class="inline">
+            <span class="muted">Use by</span>
+            <input type="date" @bind="newExpiry" />
+        </label>
+        <button type="submit" class="primary" disabled="@string.IsNullOrWhiteSpace(newName)">Add</button>
+    </form>
+
+    @if (tracked.Count == 0)
+    {
+        <p class="muted">Nothing tracked yet. Add what's in your fridge and pantry; rough amounts are fine.</p>
+    }
+
+    @foreach (var group in tracked.GroupBy(r => r.Section).OrderBy(g => g.Key))
+    {
+        <section>
+            <h2>@Labels.Section(group.Key)</h2>
+            <ul class="list">
+                @foreach (var row in group)
+                {
+                    <li class="@(row.Level == StockLevel.Out ? "is-out" : "")">
+                        <div class="row-head">
+                            <span class="name">@row.Name</span>
+                            @if (row.ExpiresOn is { } date)
+                            {
+                                <span class="badge @(Labels.UseSoon(date) ? "warn" : "")">use by @date.ToString("MMM d")</span>
+                            }
+                            <button type="button" class="icon" aria-label="@($"Remove {row.Name}")" @onclick="() => RemoveAsync(row.Name)">×</button>
+                        </div>
+                        <div class="levels" role="group" aria-label="@($"How much {row.Name}")">
+                            @foreach (var level in Labels.Levels)
+                            {
+                                <button type="button" class="@(row.Level == level ? "on" : "")" @onclick="() => SetLevelAsync(row, level)">@Labels.Level(level)</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    <section>
+        <h2>Staples</h2>
+        <p class="muted">Assumed in stock. Tap one when it runs out so it goes on the list.</p>
+        <div class="chips">
+            @foreach (var staple in staples)
+            {
+                var isOut = Store.FindPantry(staple)?.Level == StockLevel.Out;
+                <button type="button" class="chip @(isOut ? "out" : "")" aria-pressed="@isOut" @onclick="() => ToggleStapleAsync(staple, isOut)">
+                    @(isOut ? staple + " · out" : staple)
+                </button>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    private sealed record Row(string Name, StoreSection Section, StockLevel Level, DateOnly? ExpiresOn);
+
+    private bool loaded;
+    private string newName = "";
+    private StockLevel newLevel = StockLevel.Some;
+    private DateOnly? newExpiry;
+    private List<Row> tracked = [];
+    private List<string> staples = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Store.EnsureLoadedAsync();
+        Refresh();
+        loaded = true;
+    }
+
+    private void Refresh()
+    {
+        var catalog = Store.Catalog;
+        tracked = Store.Data.Pantry
+            .Where(p => !catalog.IsStaple(p.Ingredient))
+            .Select(p => new Row(catalog.Resolve(p.Ingredient), catalog.Get(p.Ingredient).Section, p.Level, p.ExpiresOn))
+            .OrderBy(r => r.Level == StockLevel.Out)
+            .ThenBy(r => r.ExpiresOn ?? DateOnly.MaxValue)
+            .ThenBy(r => r.Name, StringComparer.Ordinal)
+            .ToList();
+        staples = catalog.All.Where(i => i.IsStaple).Select(i => i.CanonicalName).ToList();
+    }
+
+    private async Task AddAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newName)) return;
+        Store.SetPantry(newName.Trim(), newLevel, newExpiry);
+        await Store.SaveAsync();
+        newName = "";
+        newExpiry = null;
+        newLevel = StockLevel.Some;
+        Refresh();
+    }
+
+    private async Task SetLevelAsync(Row row, StockLevel level)
+    {
+        Store.SetPantry(row.Name, level, row.ExpiresOn);
+        await Store.SaveAsync();
+        Refresh();
+    }
+
+    private async Task RemoveAsync(string name)
+    {
+        Store.RemovePantry(name);
+        await Store.SaveAsync();
+        Refresh();
+    }
+
+    private async Task ToggleStapleAsync(string staple, bool isOut)
+    {
+        if (isOut) Store.RemovePantry(staple);
+        else Store.SetPantry(staple, StockLevel.Out, null);
+        await Store.SaveAsync();
+        Refresh();
+    }
+}

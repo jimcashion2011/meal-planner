@@ -1,0 +1,11 @@
+@inherits LayoutComponentBase
+
+<div class="shell">
+    <main>
+        @Body
+    </main>
+    <nav class="tabbar" aria-label="Main">
+        <NavLink href="" Match="NavLinkMatch.All">Pantry</NavLink>
+        <NavLink href="recipes" Match="NavLinkMatch.Prefix">Recipes</NavLink>
+    </nav>
+</div>

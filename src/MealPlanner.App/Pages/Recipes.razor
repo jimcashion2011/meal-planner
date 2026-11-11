@@ -1,0 +1,67 @@
+@page "/recipes"
+@inject AppStore Store
+
+<PageTitle>Recipes</PageTitle>
+
+<div class="title-row">
+    <h1>Recipes</h1>
+    <a class="button primary" href="recipes/new">+ New</a>
+</div>
+
+@if (!loaded)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <ul class="list">
+        @foreach (var (recipe, index) in Store.Data.Recipes.Select((r, i) => (r, i)).OrderBy(x => x.r.Title, StringComparer.OrdinalIgnoreCase))
+        {
+            <li>
+                <a class="row-link" href="@($"recipes/{index}")">
+                    <span class="name">@recipe.Title</span>
+                    <span class="muted">@recipe.PrepMinutes min · @recipe.Ingredients.Count ingredients</span>
+                    @if (recipe.Tags is { Count: > 0 } tags)
+                    {
+                        <span class="chips small">
+                            @foreach (var tag in tags)
+                            {
+                                <span class="chip">@tag</span>
+                            }
+                        </span>
+                    }
+                </a>
+            </li>
+        }
+    </ul>
+
+    <section class="danger-zone">
+        @if (!confirmReset)
+        {
+            <button type="button" class="link" @onclick="() => confirmReset = true">Reset all data to the starter set</button>
+        }
+        else
+        {
+            <p>This clears your pantry and any recipe changes on this device.</p>
+            <button type="button" class="danger" @onclick="ResetAsync">Yes, reset</button>
+            <button type="button" @onclick="() => confirmReset = false">Cancel</button>
+        }
+    </section>
+}
+
+@code {
+    private bool loaded;
+    private bool confirmReset;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Store.EnsureLoadedAsync();
+        loaded = true;
+    }
+
+    private async Task ResetAsync()
+    {
+        await Store.ResetAsync();
+        confirmReset = false;
+    }
+}
