@@ -1,14 +1,13 @@
-using MealPlanner.Core;
 
-namespace PlannerConsole;
+namespace MealPlanner.Core;
 
 /// <summary>
 /// The family's 14 starting dinners: five favorites plus nine weeknight recipes
 /// (all 45 minutes or less) chosen to share ingredients with each other.
 /// </summary>
-public static class FamilyRecipes
+public static class StarterData
 {
-    public static IngredientCatalog Catalog { get; } = new(
+    public static IReadOnlyList<Ingredient> Ingredients { get; } =
     [
         // Meat
         new Ingredient("chicken breast", StoreSection.MeatAndSeafood, Aliases: ["chicken", "chicken breasts"]),
@@ -70,7 +69,9 @@ public static class FamilyRecipes
         new Ingredient("orange chicken sauce", StoreSection.SpicesAndSauces),
         new Ingredient("orange", StoreSection.Produce),
         new Ingredient("brown sugar", StoreSection.PantryDry, IsStaple: true),
-    ]);
+    ];
+
+    public static IngredientCatalog CreateCatalog() => new(Ingredients);
 
     private static Recipe Make(string title, string protein, int minutes, string[] tags, params string[] ingredients) =>
         new(title, ingredients.Select(i => new RecipeIngredient(i)).ToList(), minutes, protein, tags);
@@ -79,7 +80,7 @@ public static class FamilyRecipes
     private static readonly string[] KidQuick = ["kid-friendly", "quick"];
     private static readonly string[] None = [];
 
-    public static IReadOnlyList<Recipe> All { get; } =
+    public static IReadOnlyList<Recipe> Recipes { get; } =
     [
         // Named family favorites
         Make("Pizza roll-ups", "pepperoni", 25, KidQuick,

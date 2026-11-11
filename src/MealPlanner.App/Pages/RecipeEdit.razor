@@ -1,0 +1,148 @@
+@page "/recipes/new"
+@page "/recipes/{Index:int}"
+@inject AppStore Store
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "New recipe" : "Edit recipe")</PageTitle>
+
+<p><a href="recipes">‹ Recipes</a></p>
+<h1>@(IsNew ? "New recipe" : "Edit recipe")</h1>
+
+@if (!loaded)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <form class="stack" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Name</span>
+            <input @bind="title" @bind:event="oninput" placeholder="e.g. Chicken fried rice" />
+        </label>
+        <div class="two">
+            <label>
+                <span>Minutes</span>
+                <input type="number" inputmode="numeric" min="1" @bind="prepMinutes" />
+            </label>
+            <label>
+                <span>Main protein</span>
+                <input @bind="mainProtein" placeholder="chicken, beef…" />
+            </label>
+        </div>
+        <label>
+            <span>Tags <span class="muted">(comma-separated)</span></span>
+            <input @bind="tags" placeholder="kid-friendly, quick" />
+        </label>
+        <label>
+            <span>Ingredients <span class="muted">(one per line; add "(optional)" to skip it when planning)</span></span>
+            <textarea rows="10" @bind="ingredients" placeholder="ground beef&#10;taco seasoning&#10;tortilla&#10;cheddar"></textarea>
+        </label>
+
+        @if (error is not null)
+        {
+            <p class="error">@error</p>
+        }
+
+        <button type="submit" class="primary">Save</button>
+    </form>
+
+    @if (!IsNew)
+    {
+        <section class="danger-zone">
+            @if (!confirmDelete)
+            {
+                <button type="button" class="link" @onclick="() => confirmDelete = true">Delete this recipe</button>
+            }
+            else
+            {
+                <button type="button" class="danger" @onclick="DeleteAsync">Yes, delete</button>
+                <button type="button" @onclick="() => confirmDelete = false">Cancel</button>
+            }
+        </section>
+    }
+}
+
+@code {
+    private const string OptionalMarker = "(optional)";
+
+    [Parameter] public int? Index { get; set; }
+
+    private bool IsNew => Index is null;
+    private bool loaded;
+    private bool confirmDelete;
+    private string? error;
+
+    private string title = "";
+    private int prepMinutes = 30;
+    private string mainProtein = "";
+    private string tags = "";
+    private string ingredients = "";
+    private DateOnly? lastMadeOn;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Store.EnsureLoadedAsync();
+        if (Index is int i)
+        {
+            if (i < 0 || i >= Store.Data.Recipes.Count)
+            {
+                Nav.NavigateTo("recipes");
+                return;
+            }
+            var recipe = Store.Data.Recipes[i];
+            title = recipe.Title;
+            prepMinutes = recipe.PrepMinutes;
+            mainProtein = recipe.MainProtein;
+            tags = string.Join(", ", recipe.Tags ?? []);
+            ingredients = string.Join("\n", recipe.Ingredients.Select(x => x.IsOptional ? $"{x.Ingredient} {OptionalMarker}" : x.Ingredient));
+            lastMadeOn = recipe.LastMadeOn;
+        }
+        loaded = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        var lines = ingredients
+            .Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        if (string.IsNullOrWhiteSpace(title)) { error = "Give the recipe a name."; return; }
+        if (lines.Count == 0) { error = "Add at least one ingredient."; return; }
+        error = null;
+
+        var parsed = lines.Select(line =>
+        {
+            var optional = line.EndsWith(OptionalMarker, StringComparison.OrdinalIgnoreCase);
+            var name = optional ? line[..^OptionalMarker.Length].Trim() : line;
+            return new RecipeIngredient(Store.EnsureIngredient(name), "", optional);
+        }).ToList();
+
+        var tagList = tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.ToLowerInvariant())
+            .ToList();
+
+        var recipe = new Recipe(
+            title.Trim(),
+            parsed,
+            Math.Max(1, prepMinutes),
+            string.IsNullOrWhiteSpace(mainProtein) ? "none" : mainProtein.Trim().ToLowerInvariant(),
+            tagList,
+            lastMadeOn);
+
+        if (Index is int i) Store.Data.Recipes[i] = recipe;
+        else Store.Data.Recipes.Add(recipe);
+
+        await Store.SaveAsync();
+        Nav.NavigateTo("recipes");
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Index is int i)
+        {
+            Store.Data.Recipes.RemoveAt(i);
+            await Store.SaveAsync();
+        }
+        Nav.NavigateTo("recipes");
+    }
+}

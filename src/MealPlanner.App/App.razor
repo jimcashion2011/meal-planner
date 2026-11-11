@@ -1,0 +1,11 @@
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MealPlanner.App.Layout.MainLayout)" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MealPlanner.App.Layout.MainLayout)">
+            <h1>Not found</h1>
+            <p class="muted">That page doesn't exist. <a href="">Back to the pantry</a></p>
+        </LayoutView>
+    </NotFound>
+</Router>

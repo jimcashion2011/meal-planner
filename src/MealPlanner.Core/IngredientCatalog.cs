@@ -37,6 +37,12 @@ public sealed class IngredientCatalog
 
     public bool IsStaple(string name) => Get(name).IsStaple;
 
+    /// <summary>Every known ingredient once, sorted by name.</summary>
+    public IReadOnlyList<Ingredient> All =>
+        _byKey.Values.Distinct().OrderBy(i => i.CanonicalName, StringComparer.Ordinal).ToList();
+
+    public bool Contains(string name) => _byKey.ContainsKey(Clean(name)) || _byKey.ContainsKey(Normalize(name));
+
     /// <summary>Lowercase, trimmed, single spaces.</summary>
     public static string Clean(string name) =>
         string.Join(' ', name.Trim().ToLowerInvariant()
